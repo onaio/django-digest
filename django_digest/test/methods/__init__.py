@@ -1,4 +1,4 @@
-from django.utils.datastructures import SortedDict
+from collections import OrderedDict
 
 
 class WWWAuthenticateError(Exception):
@@ -11,7 +11,7 @@ class BaseAuth(object):
         self.password = password
 
     def _authenticate_headers(self, response):
-        return SortedDict([(value.split(' ', 1)[0], value)
+        return OrderedDict([(value.split(' ', 1)[0], value)
                            for header, value in response.items()
                            if header == 'WWW-Authenticate'])
 
