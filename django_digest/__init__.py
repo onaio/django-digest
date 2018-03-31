@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from builtins import str as text
 import logging
 import random
 import time
@@ -84,10 +85,11 @@ class HttpDigestAuthenticator(object):
         if not python_digest.is_digest_credential(request.META['HTTP_AUTHORIZATION']):
             return False
 
-        try:
-            six.text_type(request.META['HTTP_AUTHORIZATION'], 'utf-8')
-        except UnicodeDecodeError:
-            return False
+        if not isinstance(request.META['HTTP_AUTHORIZATION'], text):
+            try:
+                six.text_type(request.META['HTTP_AUTHORIZATION'], 'utf-8')
+            except UnicodeDecodeError:
+                return False
 
         digest_response = python_digest.parse_digest_credentials(
             request.META['HTTP_AUTHORIZATION'])
