@@ -16,4 +16,4 @@ class BasicAuth(BaseAuth):
                      response.request['PATH_INFO'])
                 )
         return 'Basic %s' % b64encode(('%s:%s' % (
-            self.username, self.password)).encode('utf-8'))
+            self.username, self.password)).encode('utf-8')).decode('utf-8')
