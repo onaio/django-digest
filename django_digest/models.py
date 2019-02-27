@@ -2,13 +2,16 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import django
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 
 from python_digest import calculate_partial_digest
 
 from django_digest.utils import get_backend, get_setting, DEFAULT_REALM
+
+User = get_user_model()
+
 
 class UserNonce(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -26,7 +29,7 @@ class PartialDigest(models.Model):
     confirmed = models.BooleanField(default=True)
     class Meta(object):
         app_label = 'django_digest'
-    
+
 _postponed_partial_digests = {}
 
 def _get_logins(user, method_name):
@@ -43,7 +46,7 @@ def _confirmed_logins(user):
 
 def _unconfirmed_logins(user):
     return _get_logins(user, 'unconfirmed_logins_for_user')
- 
+
 def _store_partial_digests(user):
     PartialDigest.objects.filter(user=user).delete()
     for (login, partial_digest, confirmed) in (
@@ -84,8 +87,8 @@ def _review_partial_digests(user):
                 pd.save()
         else:
             pd.delete()
-        
-    
+
+
 def _after_authenticate(user, password):
     for (confirmed, factory_method) in ((True, _confirmed_logins),
                                         (False, _unconfirmed_logins)):
@@ -117,12 +120,12 @@ def _new_authenticate_pre_1_11(backend, username=None, password=None):
     if user:
         _after_authenticate(user, password)
     return user
-        
+
 def _new_set_password(user, raw_password):
     _old_set_password(user, raw_password)
     _prepare_partial_digests(user, raw_password)
 
-User.check_password = _new_check_password    
+User.check_password = _new_check_password
 User.set_password = _new_set_password
 if django.VERSION >= (1, 11):
     ModelBackend.authenticate = _new_authenticate
